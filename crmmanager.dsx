@@ -1,0 +1,355 @@
+import React, { useEffect, useState } from 'react';
+import { Database, Plus, Search, Calendar, Package, CreditCard, RefreshCw } from 'lucide-react';
+export default function CrmManager() {
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders', 'accounts', 'appointments'
+  const [crmData, setCrmData] = useState({
+    orders: [],
+    accounts: [],
+    appointments: [],
+    properties: []
+  });
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  // Form states for creating mock rows
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [orderForm, setOrderForm] = useState({ orderNumber: '', customerName: '', item: '', status: 'Pending', shipDate: '2026-07-09', deliveryDate: '2026-07-15' });
+  const [showAccountForm, setShowAccountForm] = useState(false);
+  const [accountForm, setAccountForm] = useState({ accountId: '', customerName: '', phoneNumber: '', balance: 0, dueDate: '2026-07-20', address: '' });
+  const fetchCrm = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/crm');
+      if (res.ok) {
+        const data = await res.json();
+        setCrmData(data);
+      }
+    } catch (err) {
+      console.error("Error fetching CRM records:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchCrm();
+  }, []);
+  const handleCreateOrder = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/crm/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderForm)
+      });
+      if (res.ok) {
+        setShowOrderForm(false);
+        setOrderForm({ orderNumber: '', customerName: '', item: '', status: 'Pending', shipDate: '2026-07-09', deliveryDate: '2026-07-15' });
+        fetchCrm();
+      }
+    } catch (err) {
+      console.error("Failed to create order:", err);
+    }
+  };
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/crm/accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(accountForm)
+      });
+      if (res.ok) {
+        setShowAccountForm(false);
+        setAccountForm({ accountId: '', customerName: '', phoneNumber: '', balance: 0, dueDate: '2026-07-20', address: '' });
+        fetchCrm();
+      }
+    } catch (err) {
+      console.error("Failed to create account:", err);
+    }
+  };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      
+      {/* Header Controls */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 600, color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Database size={28} style={{ color: 'var(--accent-primary)' }} /> Core CRM Registry
+          </h2>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginTop: '4px' }}>
+            Inspect & mock database rows linked to the Voice Bot's tooling layers
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn-secondary" onClick={fetchCrm}>
+            <RefreshCw size={16} /> Sync Live
+          </button>
+          {activeTab === 'orders' && (
+            <button className="btn-primary" onClick={() => setShowOrderForm(!showOrderForm)}>
+              <Plus size={16} /> Mock Order
+            </button>
+          )}
+          {activeTab === 'accounts' && (
+            <button className="btn-primary" onClick={() => setShowAccountForm(!showAccountForm)}>
+              <Plus size={16} /> Mock Account
+            </button>
+          )}
+        </div>
+      </div>
+      {/* Tabs Selector */}
+      <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)', gap: '4px' }}>
+        <button 
+          onClick={() => { setActiveTab('orders'); setSearchTerm(''); }}
+          style={{
+            background: 'none',
+            border: 'none',
+            borderBottom: activeTab === 'orders' ? '2px solid var(--accent-primary)' : 'none',
+            color: activeTab === 'orders' ? 'white' : 'var(--color-text-secondary)',
+            padding: '12px 20px',
+            cursor: 'pointer',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <Package size={16} /> Order Catalog
+        </button>
+        <button 
+          onClick={() => { setActiveTab('accounts'); setSearchTerm(''); }}
+          style={{
+            background: 'none',
+            border: 'none',
+            borderBottom: activeTab === 'accounts' ? '2px solid var(--accent-primary)' : 'none',
+            color: activeTab === 'accounts' ? 'white' : 'var(--color-text-secondary)',
+            padding: '12px 20px',
+            cursor: 'pointer',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <CreditCard size={16} /> Billing Accounts
+        </button>
+        <button 
+          onClick={() => { setActiveTab('appointments'); setSearchTerm(''); }}
+          style={{
+            background: 'none',
+            border: 'none',
+            borderBottom: activeTab === 'appointments' ? '2px solid var(--accent-primary)' : 'none',
+            color: activeTab === 'appointments' ? 'white' : 'var(--color-text-secondary)',
+            padding: '12px 20px',
+            cursor: 'pointer',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <Calendar size={16} /> Booked Visits
+        </button>
+      </div>
+      {/* Mock Order Creator Form Modal Drawer */}
+      {showOrderForm && (
+        <div className="glass-panel" style={{ padding: '20px', border: '1px solid rgba(99,102,241,0.3)' }}>
+          <h4 style={{ fontSize: '1rem', color: 'white', marginBottom: '14px' }}>Seed Mock Order</h4>
+          <form onSubmit={handleCreateOrder} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>6-Digit Order #</label>
+              <input type="text" maxLength={6} required placeholder="e.g. 564738" value={orderForm.orderNumber} onChange={e=>setOrderForm({...orderForm, orderNumber: e.target.value})} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', color: 'white' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Customer Name</label>
+              <input type="text" required placeholder="Sanjay Kumar" value={orderForm.customerName} onChange={e=>setOrderForm({...orderForm, customerName: e.target.value})} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', color: 'white' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Product Name</label>
+              <input type="text" required placeholder="Smart Hub" value={orderForm.item} onChange={e=>setOrderForm({...orderForm, item: e.target.value})} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', color: 'white' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Status</label>
+              <select value={orderForm.status} onChange={e=>setOrderForm({...orderForm, status: e.target.value})} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', color: 'white' }}>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Pending">Pending</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button type="submit" className="btn-primary" style={{ padding: '8px 16px', fontSize: '0.875rem' }}>Create</button>
+              <button type="button" className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.875rem' }} onClick={()=>setShowOrderForm(false)}>Cancel</button>
+            </div>
+          </form>
+        </div>
+      )}
+      {/* Mock Account Form */}
+      {showAccountForm && (
+        <div className="glass-panel" style={{ padding: '20px', border: '1px solid rgba(99,102,241,0.3)' }}>
+          <h4 style={{ fontSize: '1rem', color: 'white', marginBottom: '14px' }}>Seed Account Profile</h4>
+          <form onSubmit={handleCreateAccount} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>6-Digit Account ID</label>
+              <input type="text" maxLength={6} required placeholder="e.g. 998877" value={accountForm.accountId} onChange={e=>setAccountForm({...accountForm, accountId: e.target.value})} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', color: 'white' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Customer Name</label>
+              <input type="text" required value={accountForm.customerName} onChange={e=>setAccountForm({...accountForm, customerName: e.target.value})} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', color: 'white' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Phone Number</label>
+              <input type="text" required placeholder="10-digit number" value={accountForm.phoneNumber} onChange={e=>setAccountForm({...accountForm, phoneNumber: e.target.value})} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', color: 'white' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Outstanding Balance (₹)</label>
+              <input type="number" required value={accountForm.balance} onChange={e=>setAccountForm({...accountForm, balance: Number(e.target.value)})} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', color: 'white' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: 'span 2' }}>
+              <label style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Street Address</label>
+              <input type="text" required placeholder="Flat 4B, Blue Horizon, Adyar, Chennai" value={accountForm.address} onChange={e=>setAccountForm({...accountForm, address: e.target.value})} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', color: 'white' }} />
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button type="submit" className="btn-primary" style={{ padding: '8px 16px', fontSize: '0.875rem' }}>Create</button>
+              <button type="button" className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.875rem' }} onClick={()=>setShowAccountForm(false)}>Cancel</button>
+            </div>
+          </form>
+        </div>
+      )}
+      {/* Search Filter Bar */}
+      <div style={{ display: 'flex', position: 'relative', width: '100%' }}>
+        <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-secondary)' }} />
+        <input 
+          type="text" 
+          placeholder={`Search ${activeTab}...`} 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            width: '100%',
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid var(--border-color)',
+            color: 'white',
+            borderRadius: '10px',
+            padding: '12px 14px 12px 42px',
+            fontSize: '0.875rem'
+          }}
+        />
+      </div>
+      {/* Database Tables Display */}
+      <div className="glass-panel" style={{ padding: '8px', overflowX: 'auto' }}>
+        
+        {loading ? (
+          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>Loading CRM registry tables...</div>
+        ) : (
+          <>
+            {/* Orders Tab */}
+            {activeTab === 'orders' && (
+              <table className="custom-table">
+                <thead>
+                  <tr>
+                    <th>Order Number</th>
+                    <th>Customer Name</th>
+                    <th>Product</th>
+                    <th>Status</th>
+                    <th>Ship Date</th>
+                    <th>Est. Delivery</th>
+                    <th>Refund Active</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {crmData.orders
+                    .filter(o => o.orderNumber.includes(searchTerm) || o.customerName.toLowerCase().includes(searchTerm.toLowerCase()))
+                    .map((order, i) => (
+                      <tr key={i}>
+                        <td style={{ fontWeight: 600, color: 'white' }}>#{order.orderNumber}</td>
+                        <td>{order.customerName}</td>
+                        <td>{order.item}</td>
+                        <td>
+                          <span className={`badge ${order.status === 'Shipped' ? 'badge-info' : (order.status === 'Delivered' ? 'badge-success' : 'badge-warning')}`}>
+                            {order.status}
+                          </span>
+                        </td>
+                        <td>{order.shipDate}</td>
+                        <td>{order.deliveryDate}</td>
+                        <td>
+                          {order.refunded ? (
+                            <span className="badge badge-danger">Refund Initiated</span>
+                          ) : (
+                            <span style={{ color: 'var(--color-text-muted)' }}>-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            )}
+            {/* Accounts Tab */}
+            {activeTab === 'accounts' && (
+              <table className="custom-table">
+                <thead>
+                  <tr>
+                    <th>Account ID</th>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Current Balance</th>
+                    <th>Due Date</th>
+                    <th>Registered Address</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {crmData.accounts
+                    .filter(a => a.accountId.includes(searchTerm) || a.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || a.phoneNumber.includes(searchTerm))
+                    .map((account, i) => (
+                      <tr key={i}>
+                        <td style={{ fontWeight: 600, color: 'white' }}>{account.accountId}</td>
+                        <td>{account.customerName}</td>
+                        <td>{account.phoneNumber}</td>
+                        <td style={{ fontWeight: 500, color: account.balance > 0 ? 'var(--warning-color)' : 'var(--success-color)' }}>
+                          ₹{account.balance}
+                        </td>
+                        <td>{account.dueDate}</td>
+                        <td style={{ fontSize: '0.813rem', color: 'var(--color-text-secondary)', maxWidth: '280px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={account.address}>
+                          {account.address}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            )}
+            {/* Appointments Tab */}
+            {activeTab === 'appointments' && (
+              <table className="custom-table">
+                <thead>
+                  <tr>
+                    <th>Appointment ID</th>
+                    <th>Property Name</th>
+                    <th>Client Name</th>
+                    <th>Date</th>
+                    <th>Scheduled Time</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {crmData.appointments
+                    .filter(a => a.propertyName.toLowerCase().includes(searchTerm.toLowerCase()) || a.customerName.toLowerCase().includes(searchTerm.toLowerCase()))
+                    .map((apt, i) => (
+                      <tr key={i}>
+                        <td>{apt.id}</td>
+                        <td style={{ fontWeight: 500, color: 'white' }}>{apt.propertyName}</td>
+                        <td>{apt.customerName}</td>
+                        <td>{apt.date}</td>
+                        <td>{apt.time}</td>
+                        <td>
+                          <span className="badge badge-success">{apt.status}</span>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
