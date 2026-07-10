@@ -1,0 +1,166 @@
+import React, { useState } from 'react';
+import { Cpu, Save, Sliders, Globe, Play, Server, AlertCircle } from 'lucide-react';
+export default function ConfigEditor() {
+  const [voiceId, setVoiceId] = useState('retell-Cimo');
+  const [temperature, setTemperature] = useState(0.7);
+  const [interruptionSensitivity, setInterruptionSensitivity] = useState(0.9);
+  const [systemPrompt, setSystemPrompt] = useState(
+`You are Nisha, a friendly, empathetic, and highly efficient Voice Customer Care Bot for NXG Homes.
+You provide customer service in English, Hindi, and Tamil. Always adapt to the user's language.
+Your guidelines:
+1. Persona: Polite, professional, and reassuring. Speak clearly at a moderate pace.
+2. Tone: Warm and helpful. For frustrated callers, convey strong empathy (e.g. "I understand this is frustrating, let me solve this for you").
+3. Conversational Style: Keep your sentences short and conversational (1-2 clauses max). Avoid technical jargon.
+4. Voice Naturalness: Use natural interjections or fillers like "hmm", "uh", or "so" with subtle pauses occasionally to sound human (e.g. "Yeah, um, let me check that for you.").
+5. Language Handling:
+   - If the user greets in English, reply in English.
+   - If in Hindi, respond in polite, respectful Hindi (e.g. "नमस्ते, मैं निशा हूँ, NXG Homes से। आज मैं आपकी क्या सहायता कर सकती हूँ?").
+   - If in Tamil, respond in polite Tamil (e.g. "வணக்கம், நான் நிஷா. உங்களுக்கு எப்படி உதவ முடியும்?").
+   - If a language is unsupported, politely ask in Hindi/English to switch: "मुझे माफ़ करें, क्या हम English में बात कर सकते हैं?".
+6. Escalation: If the customer asks for a "human", "manager", "representative", or "supervisor", transfer them IMMEDIATELY. Say "Certainly. Please hold while I connect you to a human representative." and trigger the transfer.
+7. Validation:
+   - Order numbers are exactly 6 digits. Validate the format. If invalid, ask again.
+   - Account IDs are exactly 6 digits.
+Use your tools to query order status, refunds, billing, appointments, and updating account details.
+Always confirm slot values before making write edits (like updating address or booking visit).`
+  );
+  const [saved, setSaved] = useState(false);
+  const handleSave = (e) => {
+    e.preventDefault();
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', flexWrap: 'wrap' }}>
+      
+      {/* System Prompt Code Box */}
+      <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', height: '620px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '1.125rem', color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Cpu size={20} style={{ color: 'var(--accent-primary)' }} /> Agent System Prompt
+          </h3>
+          {saved && <span className="badge badge-success">Prompt Synced with Backend</span>}
+        </div>
+        
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+            This prompt is loaded during connection handshakes to define conversational states, entities, and validation logic.
+          </p>
+          <textarea
+            value={systemPrompt}
+            onChange={(e) => setSystemPrompt(e.target.value)}
+            style={{
+              flex: 1,
+              background: 'var(--bg-input)',
+              border: '1px solid var(--border-color)',
+              color: 'var(--color-text-primary)',
+              borderRadius: '12px',
+              padding: '16px',
+              fontSize: '0.813rem',
+              lineHeight: 1.5,
+              fontFamily: 'monospace',
+              resize: 'none',
+              outline: 'none'
+            }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+            <button className="btn-primary" onClick={handleSave}>
+              <Save size={16} /> Update Prompt Setup
+            </button>
+          </div>
+        </div>
+      </div>
+      {/* Voice Parameters Panel */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        
+        {/* Settings Box */}
+        <div className="glass-panel" style={{ padding: '24px' }}>
+          <h3 style={{ fontSize: '1.125rem', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+            <Sliders size={20} style={{ color: 'var(--accent-secondary)' }} /> Voice Settings
+          </h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            {/* Voice select */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>Default Voice ID</label>
+              <select 
+                value={voiceId} 
+                onChange={(e) => setVoiceId(e.target.value)}
+                style={{
+                  background: 'var(--bg-input)',
+                  border: '1px solid var(--border-color)',
+                  color: 'white',
+                  borderRadius: '8px',
+                  padding: '10px 12px',
+                  fontSize: '0.875rem'
+                }}
+              >
+                <option value="retell-Cimo">Retell Cimo (Male, Professional)</option>
+                <option value="retell-Sara">Retell Sara (Female, Warm)</option>
+                <option value="elevenlabs-Nisha">ElevenLabs Nisha (Female, Conversational)</option>
+              </select>
+            </div>
+            {/* Temperature slider */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+                <label style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>LLM Temperature</label>
+                <span style={{ color: 'white' }}>{temperature}</span>
+              </div>
+              <input 
+                type="range" 
+                min={0.1} 
+                max={1.0} 
+                step={0.05} 
+                value={temperature}
+                onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                style={{ width: '100%', accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
+              />
+            </div>
+            {/* Interruption slider */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+                <label style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>Interruption Sensitivity</label>
+                <span style={{ color: 'white' }}>{interruptionSensitivity}</span>
+              </div>
+              <input 
+                type="range" 
+                min={0.0} 
+                max={1.0} 
+                step={0.05} 
+                value={interruptionSensitivity}
+                onChange={(e) => setInterruptionSensitivity(parseFloat(e.target.value))}
+                style={{ width: '100%', accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
+              />
+            </div>
+          </div>
+        </div>
+        {/* Integration API Box */}
+        <div className="glass-panel" style={{ padding: '24px' }}>
+          <h3 style={{ fontSize: '1.125rem', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <Server size={20} style={{ color: 'var(--info-color)' }} /> Webhook Link
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.813rem' }}>
+            <p style={{ color: 'var(--color-text-secondary)' }}>
+              Configure your Retell Dashboard agent to point to this WebSocket server:
+            </p>
+            <div style={{
+              background: '#0B0F19',
+              border: '1px solid var(--border-color)',
+              borderRadius: '8px',
+              padding: '10px 12px',
+              color: 'var(--success-color)',
+              fontFamily: 'monospace',
+              fontSize: '0.75rem',
+              wordBreak: 'break-all'
+            }}>
+              ws://your-public-ip:5000/llm-websocket
+            </div>
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <AlertCircle size={14} /> Set Retell Agent config to "custom-llm" to activate.
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
