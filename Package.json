@@ -1,0 +1,15 @@
+{
+  "name": "voice-customer-care-bot",
+  "version": "1.0.0",
+  "description": "Production-ready Voice Customer Care Bot and Analytics Dashboard",
+  "scripts": {
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "start": "npm start --prefix backend"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
