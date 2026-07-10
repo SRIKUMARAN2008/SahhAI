@@ -1,0 +1,92 @@
+import { handleUtterance } from './orchestrator.js';
+import { db, initDb } from './database.js';
+async function runTests() {
+  console.log("=================================================");
+  console.log("Starting Conversational Engine Logic Unit Tests...");
+  console.log("=================================================");
+  // Initialize DB
+  initDb();
+  // Test Case 1: Order Status Check flow
+  console.log("\n[Test 1] Order Status Check Flow");
+  let sessionState = {
+    conversationHistory: [],
+    language: "en",
+    collectedSlots: {},
+    activeIntent: null,
+    step: null,
+    isEscalated: false,
+    isEnded: false
+  };
+  // Turn 1
+  let res = await handleUtterance(sessionState, "I want to check my order status");
+  console.log("User: 'I want to check my order status'");
+  console.log(`Bot: '${res.text}' (Intent: ${res.intent}, Action: ${res.action})`);
+  // Turn 2
+  res = await handleUtterance(sessionState, "564738");
+  console.log("User: '564738'");
+  console.log(`Bot: '${res.text}' (Intent: ${res.intent}, Action: ${res.action})`);
+  
+  if (res.text.includes("2026-07-16")) {
+    console.log("✅ Success: Expected delivery date retrieved successfully.");
+  } else {
+    console.log("❌ Failure: Delivery date not found in output.");
+  }
+  // Test Case 2: Address update flow with CRM state modification verification
+  console.log("\n[Test 2] Address Update Flow with CRM Verification");
+  sessionState = {
+    conversationHistory: [],
+    language: "en",
+    collectedSlots: {},
+    activeIntent: null,
+    step: null,
+    isEscalated: false,
+    isEnded: false
+  };
+  // Turn 1: Trigger update
+  res = await handleUtterance(sessionState, "I need to update my address");
+  console.log("User: 'I need to update my address'");
+  console.log(`Bot: '${res.text}'`);
+  // Turn 2: Provide Account ID
+  res = await handleUtterance(sessionState, "My ID is 445566");
+  console.log("User: 'My ID is 445566'");
+  console.log(`Bot: '${res.text}'`);
+  // Turn 3: Provide Address
+  const newAddress = "100 New Tech Park, OMR, Chennai";
+  res = await handleUtterance(sessionState, newAddress);
+  console.log(`User: '${newAddress}'`);
+  console.log(`Bot: '${res.text}'`);
+  // Turn 4: Confirm update
+  res = await handleUtterance(sessionState, "Yes, that is correct");
+  console.log("User: 'Yes, that is correct'");
+  console.log(`Bot: '${res.text}'`);
+  // Verify DB state
+  const updatedAccount = db.getAccount("445566");
+  if (updatedAccount.address === newAddress) {
+    console.log("✅ Success: CRM database updated successfully to:", updatedAccount.address);
+  } else {
+    console.log("❌ Failure: CRM address field was not updated. Found:", updatedAccount.address);
+  }
+  // Test Case 3: Live Agent Escalation Trigger
+  console.log("\n[Test 3] Live Handoff Escalation Trigger");
+  sessionState = {
+    conversationHistory: [],
+    language: "en",
+    collectedSlots: {},
+    activeIntent: null,
+    step: null,
+    isEscalated: false,
+    isEnded: false
+  };
+  res = await handleUtterance(sessionState, "I want to speak with a human manager immediately");
+  console.log("User: 'I want to speak with a human manager immediately'");
+  console.log(`Bot: '${res.text}' (Intent: ${res.intent}, Action: ${res.action})`);
+  if (res.action === "transfer") {
+    console.log("✅ Success: Handoff escalation action correctly triggered.");
+  } else {
+    console.log("❌ Failure: Handoff action was not triggered.");
+  }
+  console.log("\n=================================================");
+  console.log("Conversational Engine Tests Complete!");
+  console.log("=================================================");
+}
+runTests().catch(err => console.error("Test execution failed:", err));
